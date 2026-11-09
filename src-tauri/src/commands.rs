@@ -161,9 +161,13 @@ pub fn reveal_in_explorer(path: String) -> Result<(), String> {
     let is_file = Path::new(&path).is_file();
     #[cfg(windows)]
     {
+        use std::os::windows::process::CommandExt;
+        // explorer.exe has its own command-line parser: `"/select,C:\a b\c.txt"` (what
+        // Command::arg produces for paths with spaces) is not understood and it falls back
+        // to the default folder. The quotes must wrap only the path: /select,"C:\a b\c.txt".
         let p = path.replace('/', "\\");
         let mut cmd = Proc::new("explorer");
-        if is_file { cmd.arg(format!("/select,{p}")) } else { cmd.arg(&p) };
+        if is_file { cmd.raw_arg(format!("/select,\"{p}\"")) } else { cmd.raw_arg(format!("\"{p}\"")) };
         spawn(&mut cmd)
     }
     #[cfg(target_os = "macos")]
