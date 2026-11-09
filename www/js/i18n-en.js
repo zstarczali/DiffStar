@@ -126,6 +126,8 @@ export const EN = {
   'Kis- és nagybetűk egyformák': 'Ignore case',
   'Alapból csak az eltérések (azonos részek összecsukva)': 'Show only the differences by default (identical parts folded)',
   'Kódolás nem UTF-8 fájlokhoz': 'Encoding for non-UTF-8 files',
+  'Windows-1250 (közép-európai)': 'Windows-1250 (Central European)',
+  'Windows-1252 (nyugat-európai)': 'Windows-1252 (Western European)',
   'BOM nélküli, nem érvényes UTF-8 fájlok így olvasódnak be.': 'Files without a BOM that are not valid UTF-8 are read with this encoding.',
   'Fájlok összehasonlítása': 'Compare files',
   'Tartalom szerint (bájtonként)': 'By content (byte by byte)',

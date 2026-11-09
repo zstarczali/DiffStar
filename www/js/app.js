@@ -584,7 +584,7 @@ async function settingsDlg(startTab) {
       fld('context', t('Kontextus sorok („Csak eltérések” módban)'), h('input.inp', { type: 'number', min: 0, max: 100, value: s.context ?? 3 })),
       chk('ignore_case', t('Kis- és nagybetűk egyformák'), s.ignore_case),
       chk('only_changes', t('Alapból csak az eltérések (azonos részek összecsukva)'), s.only_changes),
-      fld('fallback_encoding', t('Kódolás nem UTF-8 fájlokhoz'), sel([['windows-1250', 'Windows-1250 (közép-európai)'], ['iso-8859-2', 'ISO-8859-2'], ['windows-1252', 'Windows-1252 (nyugat-európai)'], ['iso-8859-1', 'ISO-8859-1'], ['windows-1251', 'Windows-1251'], ['shift_jis', 'Shift_JIS'], ['gbk', 'GBK']], s.fallback_encoding || 'windows-1250'),
+      fld('fallback_encoding', t('Kódolás nem UTF-8 fájlokhoz'), sel([['windows-1250', t('Windows-1250 (közép-európai)')], ['iso-8859-2', 'ISO-8859-2'], ['windows-1252', t('Windows-1252 (nyugat-európai)')], ['iso-8859-1', 'ISO-8859-1'], ['windows-1251', 'Windows-1251'], ['shift_jis', 'Shift_JIS'], ['gbk', 'GBK']], s.fallback_encoding || 'windows-1250'),
         t('BOM nélküli, nem érvényes UTF-8 fájlok így olvasódnak be.'), true),
       h('div.settings-sec', t('Mappák')),
       fld('dir_mode', t('Fájlok összehasonlítása'), sel([['content', t('Tartalom szerint (bájtonként)')], ['quick', t('Méret és dátum szerint (gyors)')]], s.dir_mode || 'content')),
