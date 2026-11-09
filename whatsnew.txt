@@ -1,0 +1,27 @@
+DiffStar - What's new
+=====================
+
+0.2.0
+-----
+- Folder comparison: three views, as in FtpStar: Details (tree), Small
+  icons and Large icons. The icon views show one folder at a time with a
+  breadcrumb bar; every tile holds the left and the right picture side by
+  side (image previews), coloured by status. Folders open with a double
+  click, Backspace goes up. The chosen view is remembered.
+- Duplicate finder (toolbar, folder view, Ctrl+Shift+D): files with the
+  same content in one or two folders, also inside one folder. Files are
+  grouped by size, then by a hash of their beginning, then by a full
+  SHA-256. Groups are listed by reclaimable space, with image previews
+  (list or large cards), a minimum size and an "only between the two
+  folders" filter.
+- Quick selection for duplicates: keep the oldest / newest / shortest
+  path in every group, or select the copies of one side. Selected files
+  go to the recycle bin (restorable); a group can never lose all copies.
+- Fix: the folder options bar wrapped the mode selector onto two lines
+  and pushed the filters out of the window.
+
+0.1.0
+-----
+- First version: text, folder, image and binary (hex) comparison, merging
+  and editing, AI explanation with advice and follow-up questions, git
+  difftool integration, themes from GitStar.
