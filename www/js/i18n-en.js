@@ -223,6 +223,7 @@ export const EN = {
   'Méret és dátum szerint': 'By size and date',
   'Szűrés névre…': 'Filter by name…',
   'Leállítás': 'Stop',
+  'Leállítás…': 'Stopping…',
   'Összehasonlítás újra (F5)': 'Compare again (F5)',
   'Azonos': 'Identical',
   'Azonos fájlok mutatása': 'Show identical files',

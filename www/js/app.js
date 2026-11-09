@@ -256,6 +256,7 @@ async function closeTab(i) {
     if (!res) return;
     if (res === 'save' && !(await v.saveAll())) return;
   }
+  v.closed?.(); // a running search of the tab stops
   S.tabs.splice(i, 1);
   if (S.active >= S.tabs.length) S.active = S.tabs.length - 1;
   else if (i < S.active) S.active--;
@@ -907,7 +908,7 @@ async function boot() {
     else if ((e.altKey && e.key === 'ArrowUp') || (e.key === 'F8' && e.shiftKey)) { e.preventDefault(); v?.go?.(-1); }
     else if (e.altKey && e.key === 'ArrowRight' && v?.copyCurrent) { e.preventDefault(); v.copyCurrent('toR'); }
     else if (e.altKey && e.key === 'ArrowLeft' && v?.copyCurrent) { e.preventDefault(); v.copyCurrent('toL'); }
-    else if (e.key === 'Escape') { document.querySelector('.ai-panel')?.remove(); }
+    else if (e.key === 'Escape') { const ai = document.querySelector('.ai-panel'); if (ai) ai.remove(); else if (v?.running && !document.querySelector('.overlay')) v.stop?.(); }
   });
   let wheelSum = 0, wheelLast = 0, wheelAt = 0;
   addEventListener('wheel', (e) => {
