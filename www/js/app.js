@@ -264,6 +264,21 @@ async function closeTab(i) {
   renderAll();
 }
 
+/** Closing a tab from the UI asks first: the × is easy to hit by accident.
+ *  A tab with unsaved changes skips this, closeTab() asks about saving anyway. */
+async function askCloseTab(i) {
+  const v = S.tabs[i];
+  if (!v) return;
+  if (!v.isDirty() && !(await confirmDlg(t('Fül bezárása'), t('Bezárod a(z) „{0}” fület?', v.title()), t('Bezárás')))) return;
+  const idx = S.tabs.indexOf(v);
+  if (idx >= 0) closeTab(idx);
+}
+
+async function askCloseOthers(v) {
+  if (S.tabs.length < 2 || !(await confirmDlg(t('Fül bezárása'), t('Bezárod a többi fület ({0} db)?', S.tabs.length - 1), t('Bezárás')))) return;
+  for (let k = S.tabs.length - 1; k >= 0; k--) if (S.tabs[k] !== v) await closeTab(k);
+}
+
 function switchTab(i) {
   if (i === S.active) return;
   S.active = i;
@@ -288,18 +303,18 @@ function renderTabs() {
     ...S.tabs.map((v, i) => h('div.tab' + (i === S.active ? '.active' : ''), {
       title: v.tooltip(),
       on: {
-        mousedown: (e) => { if (e.button === 1) { e.preventDefault(); closeTab(i); } },
+        mousedown: (e) => { if (e.button === 1) { e.preventDefault(); askCloseTab(i); } },
         click: () => switchTab(i),
         contextmenu: (e) => contextMenu(e, [
           { label: t('Újratöltés'), icon: 'refresh', key: 'F5', action: () => { switchTab(i); v.reload(); } },
           { label: t('Oldalak felcserélése'), icon: 'swap', action: () => v.swap() },
           '-',
-          { label: t('Bezárás'), icon: 'close', key: 'Ctrl+W', action: () => closeTab(i) },
-          { label: t('A többi bezárása'), action: async () => { for (let k = S.tabs.length - 1; k >= 0; k--) if (S.tabs[k] !== v) await closeTab(k); } },
+          { label: t('Bezárás'), icon: 'close', key: 'Ctrl+W', action: () => askCloseTab(i) },
+          { label: t('A többi bezárása'), action: () => askCloseOthers(v) },
         ]),
       },
     }, icon(tabIcon(v)), h('span.name', v.title()), v.isDirty() ? h('span.tab-dirty', { title: t('Nem mentett módosítások') }, '●') : null,
-    h('button.x', { title: t('Bezárás'), on: { click: (e) => { e.stopPropagation(); closeTab(i); } } }, icon('close')))),
+    h('button.x', { title: t('Bezárás'), on: { click: (e) => { e.stopPropagation(); askCloseTab(i); } } }, icon('close')))),
     h('button.tab-add', { title: t('Új összehasonlítás'), on: { click: () => { S.active = -1; renderAll(); } } }, icon('plus')),
   );
 }
@@ -895,7 +910,7 @@ async function boot() {
     else if (mod && key === 'o') { e.preventDefault(); openDlg(e.shiftKey ? 'folders' : 'files'); }
     else if (mod && e.shiftKey && key === 'd') { e.preventDefault(); openDups(); }
     else if (mod && key === 'n') { e.preventDefault(); openTextScratch(); }
-    else if (mod && key === 'w') { e.preventDefault(); if (S.active >= 0) closeTab(S.active); }
+    else if (mod && key === 'w') { e.preventDefault(); if (S.active >= 0) askCloseTab(S.active); }
     else if (mod && e.key === 'Tab' && S.tabs.length > 1) { e.preventDefault(); switchTab((S.active + (e.shiftKey ? S.tabs.length - 1 : 1)) % S.tabs.length); }
     else if (mod && key === ',') { e.preventDefault(); settingsDlg(); }
     else if (mod && key === 's' && v?.kind === 'text') { e.preventDefault(); v.saveAll(); }
