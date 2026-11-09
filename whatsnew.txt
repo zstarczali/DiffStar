@@ -1,6 +1,18 @@
 DiffStar - What's new
 =====================
 
+0.2.1
+-----
+- Fix: the duplicate search could not always be stopped. It shared its
+  stop flag with the folder comparison, so a comparison starting in
+  another tab (or a stop sent before the search had really started,
+  e.g. while a sleeping disk spun up) swallowed the Stop. Every search
+  now has its own stop flag and file counter.
+- Duplicate search: Esc stops it too, the button shows "Stopping…"
+  at once, and closing the tab stops a running search.
+- Fix: the Windows-1250 / Windows-1252 encoding names in Settings stayed
+  Hungarian in the English interface.
+
 0.2.0
 -----
 - Folder comparison: three views, as in FtpStar: Details (tree), Small

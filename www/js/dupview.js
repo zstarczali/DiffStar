@@ -8,6 +8,7 @@ import { IMG_THUMB, wantThumb, lazyThumb } from './thumbs.js';
 
 const MIN_SIZES = [[1, () => t('Bármekkora')], [1024, () => '≥ 1 KB'], [102400, () => '≥ 100 KB'], [1048576, () => '≥ 1 MB'], [10485760, () => '≥ 10 MB']];
 const MAX_GROUPS = 2000;
+let lastJob = Date.now(); // every search gets its own id: its stop and counter are its own
 
 export class DupView {
   constructor(ctx, roots) {
@@ -16,6 +17,8 @@ export class DupView {
     this.roots = [roots[0] || '', roots[1] || ''];
     this.res = null;
     this.running = false;
+    this.stopping = false;
+    this.job = 0;
     this.marked = new Set(); // paths selected for the recycle bin
     this.q = '';
     this.cross = false; // only groups that have copies on both sides
@@ -119,7 +122,7 @@ export class DupView {
     const sel = (label, fn) => ({ label, action: () => { this.autoMark(fn); } });
     this.optbar.replaceChildren(
       this.running
-        ? h('button.btn.sm.danger', { on: { click: () => invoke('cancel_compare') } }, icon('stop'), t('Leállítás'))
+        ? h('button.btn.sm.danger', { disabled: this.stopping || null, title: 'Esc', on: { click: () => this.stop() } }, icon('stop'), this.stopping ? t('Leállítás…') : t('Leállítás'))
         : h('button.btn.sm.primary', { disabled: !(this.roots[0] || this.roots[1]) || null, title: t('Keresés újra (F5)'), on: { click: () => this.run() } }, icon('refresh'), t('Keresés')),
       this.running ? h('span.dim.fv-prog', t('Folyamatban…')) : null,
       min,
@@ -172,24 +175,38 @@ export class DupView {
     this.renderList();
   }
 
+  /** Stops the running search; the partial result stays. */
+  stop() {
+    if (!this.running || this.stopping) return;
+    this.stopping = true;
+    invoke('cancel_dups', { job: this.job }).catch(() => {});
+    this.renderOpts();
+  }
+
+  /** The tab is closed: a running search is not needed any more. */
+  closed() { if (this.running) invoke('cancel_dups', { job: this.job }).catch(() => {}); }
+
   async run() {
     const roots = this.roots.filter(Boolean);
     if (!roots.length || this.running) return;
     this.running = true;
+    this.stopping = false;
+    const job = this.job = ++lastJob;
     this.marked.clear();
     this.renderOpts();
     this.renderList();
     this.ctx.setBusy(true, t('Duplikátumok keresése…'));
     const timer = setInterval(async () => {
-      const n = await invoke('compare_progress').catch(() => 0);
+      const n = await invoke('dups_progress', { job }).catch(() => 0);
       const p = this.optbar.querySelector('.fv-prog');
       if (p) p.textContent = t('{0} fájl átnézve…', n);
     }, 250);
     let res = null;
-    try { res = await invoke('find_duplicates', { roots, opts: { ignore: this.s.dir_ignore || '', min_size: this.minSize } }); }
+    try { res = await invoke('find_duplicates', { roots, opts: { ignore: this.s.dir_ignore || '', min_size: this.minSize }, job }); }
     catch (e) { toast(String(e), 'err'); }
     clearInterval(timer);
     this.running = false;
+    this.stopping = false;
     this.ctx.setBusy(false);
     if (res) {
       // root indexes refer to the non-empty folders: map them back to left / right

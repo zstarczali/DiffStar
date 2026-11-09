@@ -2,7 +2,7 @@
 //! Files are grouped by size first, then by a hash of the first 64 KB, and
 //! only the remaining candidates are hashed in full (SHA-256).
 
-use crate::dirs::{wild, CANCEL, PROGRESS};
+use crate::dirs::wild;
 use crate::files::mtime_of;
 use crate::settings::tr;
 use serde::{Deserialize, Serialize};
@@ -11,9 +11,41 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::Ordering as AO;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering as AO};
+use std::sync::{Arc, LazyLock, Mutex};
 
 const HEAD: usize = 64 * 1024;
+
+/// One search: its own stop flag and counter, so a folder comparison or
+/// another search running at the same time cannot reset or mix them.
+#[derive(Default)]
+pub struct Job {
+    cancel: AtomicBool,
+    progress: AtomicU64,
+}
+
+impl Job {
+    fn stopped(&self) -> bool {
+        self.cancel.load(AO::Relaxed)
+    }
+}
+
+static JOBS: LazyLock<Mutex<HashMap<u64, Arc<Job>>>> = LazyLock::new(Default::default);
+
+fn job(id: u64) -> Arc<Job> {
+    JOBS.lock().unwrap().entry(id).or_default().clone()
+}
+
+/// Stops search `id`; also when it has not started yet (a stop sent while the
+/// request is on its way, or while a sleeping disk spins up, is kept).
+pub fn cancel(id: u64) {
+    job(id).cancel.store(true, AO::Relaxed);
+}
+
+/// Files looked at so far by search `id`.
+pub fn progress(id: u64) -> u64 {
+    JOBS.lock().unwrap().get(&id).map_or(0, |j| j.progress.load(AO::Relaxed))
+}
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(default)]
@@ -63,10 +95,10 @@ struct Cand {
     size: u64,
 }
 
-fn walk(root: usize, dir: &Path, rel: &str, ignore: &[String], min: u64, seen: &mut HashSet<PathBuf>, out: &mut Vec<Cand>) {
+fn walk(job: &Job, root: usize, dir: &Path, rel: &str, ignore: &[String], min: u64, seen: &mut HashSet<PathBuf>, out: &mut Vec<Cand>) {
     let Ok(rd) = fs::read_dir(dir) else { return };
     for e in rd.flatten() {
-        if CANCEL.load(AO::Relaxed) {
+        if job.stopped() {
             return;
         }
         let name = e.file_name().to_string_lossy().into_owned();
@@ -80,9 +112,9 @@ fn walk(root: usize, dir: &Path, rel: &str, ignore: &[String], min: u64, seen: &
         let path = e.path();
         let r = if rel.is_empty() { name.clone() } else { format!("{rel}/{name}") };
         if ft.is_dir() {
-            walk(root, &path, &r, ignore, min, seen, out);
+            walk(job, root, &path, &r, ignore, min, seen, out);
         } else if let Ok(m) = e.metadata() {
-            PROGRESS.fetch_add(1, AO::Relaxed);
+            job.progress.fetch_add(1, AO::Relaxed);
             let size = m.len();
             if size == 0 || size < min {
                 continue;
@@ -96,13 +128,13 @@ fn walk(root: usize, dir: &Path, rel: &str, ignore: &[String], min: u64, seen: &
     }
 }
 
-fn hash(path: &Path, limit: Option<usize>) -> Option<[u8; 32]> {
+fn hash(job: &Job, path: &Path, limit: Option<usize>) -> Option<[u8; 32]> {
     let mut f = fs::File::open(path).ok()?;
     let mut h = Sha256::new();
     let mut buf = vec![0u8; 256 * 1024];
     let mut left = limit.unwrap_or(usize::MAX);
     while left > 0 {
-        if CANCEL.load(AO::Relaxed) {
+        if job.stopped() {
             return None;
         }
         let want = buf.len().min(left);
@@ -117,10 +149,10 @@ fn hash(path: &Path, limit: Option<usize>) -> Option<[u8; 32]> {
 }
 
 /// Splits each group by the key; groups of one are dropped.
-fn split<K: std::hash::Hash + Eq>(groups: Vec<Vec<Cand>>, key: impl Fn(&Cand) -> Option<K>) -> Vec<Vec<Cand>> {
+fn split<K: std::hash::Hash + Eq>(job: &Job, groups: Vec<Vec<Cand>>, key: impl Fn(&Cand) -> Option<K>) -> Vec<Vec<Cand>> {
     let mut out = Vec::new();
     for g in groups {
-        if CANCEL.load(AO::Relaxed) {
+        if job.stopped() {
             break;
         }
         let mut m: HashMap<K, Vec<Cand>> = HashMap::new();
@@ -134,7 +166,15 @@ fn split<K: std::hash::Hash + Eq>(groups: Vec<Vec<Cand>>, key: impl Fn(&Cand) ->
     out
 }
 
-pub fn find(roots: &[String], opts: &DupOpts) -> Result<DupResult, String> {
+/// Search `id` (chosen by the caller; `cancel(id)` stops it).
+pub fn find(roots: &[String], opts: &DupOpts, id: u64) -> Result<DupResult, String> {
+    let j = job(id);
+    let r = find_in(&j, roots, opts);
+    JOBS.lock().unwrap().remove(&id);
+    r
+}
+
+fn find_in(job: &Job, roots: &[String], opts: &DupOpts) -> Result<DupResult, String> {
     if roots.is_empty() {
         return Err(tr("Nincs megadva mappa.", "No folder given."));
     }
@@ -143,15 +183,13 @@ pub fn find(roots: &[String], opts: &DupOpts) -> Result<DupResult, String> {
             return Err(tr(&format!("A mappa nem található: {p}"), &format!("Folder not found: {p}")));
         }
     }
-    CANCEL.store(false, AO::Relaxed);
-    PROGRESS.store(0, AO::Relaxed);
     let ignore: Vec<String> = opts.ignore.split(';').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
     let mut all = Vec::new();
     let mut seen = HashSet::new();
     for (i, r) in roots.iter().enumerate() {
-        walk(i, Path::new(r), "", &ignore, opts.min_size.max(1), &mut seen, &mut all);
+        walk(job, i, Path::new(r), "", &ignore, opts.min_size.max(1), &mut seen, &mut all);
     }
-    let scanned = PROGRESS.load(AO::Relaxed);
+    let scanned = job.progress.load(AO::Relaxed);
 
     // 1. same size
     let mut by_size: HashMap<u64, Vec<Cand>> = HashMap::new();
@@ -160,8 +198,8 @@ pub fn find(roots: &[String], opts: &DupOpts) -> Result<DupResult, String> {
     }
     let groups: Vec<Vec<Cand>> = by_size.into_values().filter(|v| v.len() > 1).collect();
     // 2. same beginning; 3. same full content (small files are already fully hashed)
-    let groups = split(groups, |c| hash(&c.path, Some(HEAD)));
-    let groups = split(groups, |c| if c.size as usize <= HEAD { Some([0u8; 32]) } else { hash(&c.path, None) });
+    let groups = split(job, groups, |c| hash(job, &c.path, Some(HEAD)));
+    let groups = split(job, groups, |c| if c.size as usize <= HEAD { Some([0u8; 32]) } else { hash(job, &c.path, None) });
 
     let mut out: Vec<DupGroup> = groups
         .into_iter()
@@ -179,7 +217,7 @@ pub fn find(roots: &[String], opts: &DupOpts) -> Result<DupResult, String> {
     // the most wasted space first
     out.sort_by(|a, b| (b.size * (b.files.len() as u64 - 1)).cmp(&(a.size * (a.files.len() as u64 - 1))).then_with(|| a.files[0].rel.cmp(&b.files[0].rel)));
     let wasted = out.iter().map(|g| g.size * (g.files.len() as u64 - 1)).sum();
-    Ok(DupResult { groups: out, scanned, wasted, cancelled: CANCEL.load(AO::Relaxed) })
+    Ok(DupResult { groups: out, scanned, wasted, cancelled: job.stopped() })
 }
 
 /// Moves files to the recycle bin / trash.
@@ -211,7 +249,7 @@ mod tests {
         fs::write(b.join("empty2"), "").unwrap();
 
         let roots = vec![a.to_string_lossy().into_owned(), b.to_string_lossy().into_owned()];
-        let r = find(&roots, &DupOpts::default()).unwrap();
+        let r = find(&roots, &DupOpts::default(), 7).unwrap();
         assert_eq!(r.groups.len(), 2);
         assert_eq!(r.groups[0].size, 200_000); // most wasted space first
         assert_eq!(r.groups[0].files.len(), 2);
@@ -221,8 +259,27 @@ mod tests {
         assert_eq!(r.wasted, 200_000 + 2 * 5);
 
         // the same folder twice: nothing is its own duplicate
-        let r = find(&[roots[1].clone(), roots[1].clone()], &DupOpts::default()).unwrap();
+        let r = find(&[roots[1].clone(), roots[1].clone()], &DupOpts::default(), 7).unwrap();
         assert_eq!(r.groups.len(), 0);
+        let _ = fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn a_stop_before_the_start_is_kept_and_jobs_are_separate() {
+        let base = std::env::temp_dir().join(format!("diffstar-dupstop-{}", std::process::id()));
+        fs::create_dir_all(&base).unwrap();
+        for i in 0..3 {
+            fs::write(base.join(format!("{i}.txt")), "same").unwrap();
+        }
+        let root = vec![base.to_string_lossy().into_owned()];
+        cancel(41); // sent before the search began
+        let r = find(&root, &DupOpts::default(), 41).unwrap();
+        assert!(r.cancelled);
+        // another search is not affected by that stop
+        let r = find(&root, &DupOpts::default(), 42).unwrap();
+        assert!(!r.cancelled);
+        assert_eq!(r.groups.len(), 1);
+        assert!(JOBS.lock().unwrap().is_empty());
         let _ = fs::remove_dir_all(&base);
     }
 }

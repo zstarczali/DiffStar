@@ -512,8 +512,20 @@ pub async fn local_thumb(path: String, size: u32) -> Result<String, String> {
 
 /// Files with the same content in the given folders (cancel: `cancel_compare`).
 #[tauri::command]
-pub async fn find_duplicates(roots: Vec<String>, opts: crate::dups::DupOpts) -> Result<crate::dups::DupResult, String> {
-    blocking(move || crate::dups::find(&roots, &opts)).await
+pub async fn find_duplicates(roots: Vec<String>, opts: crate::dups::DupOpts, job: u64) -> Result<crate::dups::DupResult, String> {
+    blocking(move || crate::dups::find(&roots, &opts, job)).await
+}
+
+/// Stops duplicate search `job` (kept if it has not started yet).
+#[tauri::command]
+pub fn cancel_dups(job: u64) {
+    crate::dups::cancel(job);
+}
+
+/// Files looked at so far by duplicate search `job`.
+#[tauri::command]
+pub fn dups_progress(job: u64) -> u64 {
+    crate::dups::progress(job)
 }
 
 /// Moves files to the recycle bin.

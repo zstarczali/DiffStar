@@ -105,6 +105,8 @@ pub fn run() {
             commands::binary_summary,
             commands::local_thumb,
             commands::find_duplicates,
+            commands::cancel_dups,
+            commands::dups_progress,
             commands::move_to_trash,
             commands::diff_text,
             commands::unified_patch,

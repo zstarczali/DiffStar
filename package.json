@@ -1,6 +1,6 @@
 {
   "name": "diffstar",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "DiffStar - file and folder compare (Tauri 2 + Rust) with visual diff, merge and AI explanations",
   "scripts": {

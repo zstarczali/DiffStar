@@ -1,7 +1,7 @@
 DiffStar Installation Guide
 ===========================
 
-Version 0.2.0
+Version 0.2.1
 -------------
 Folder comparison has three views (details tree, small icons, large icons
 with image previews), and a duplicate finder looks for files with the same
