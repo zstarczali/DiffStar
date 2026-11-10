@@ -1,8 +1,11 @@
 DiffStar Installation Guide
 ===========================
 
-Version 0.2.1
+Version 0.2.2
 -------------
+On macOS the self-update installs the new version and restarts
+DiffStar, instead of only opening the downloaded .dmg.
+
 Folder comparison has three views (details tree, small icons, large icons
 with image previews), and a duplicate finder looks for files with the same
 content in one or two folders. See whatsnew.txt for the release history.
