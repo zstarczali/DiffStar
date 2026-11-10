@@ -1,6 +1,14 @@
 DiffStar - What's new
 =====================
 
+0.2.2
+-----
+- Fix: on macOS the self-update only downloaded and opened the .dmg
+  instead of installing it. The disk image carried a license
+  agreement, which stopped the silent mount. The macOS .dmg has no
+  license page any more, and the updater accepts one if present, so
+  DiffStar replaces itself and restarts, as on Windows.
+
 0.2.1
 -----
 - Fix: the duplicate search could not always be stopped. It shared its
