@@ -4,6 +4,31 @@
 
 <h1 align="center">DiffStar</h1>
 
+<!-- badges:start -->
+<p align="center">
+  <a href="https://www.c64va.pro/diffstar.html"><img src="https://img.shields.io/badge/website-c64va.pro-e05d44?style=flat" alt="Website"></a>
+  <a href="https://github.com/zstarczali/DiffStar/blob/main/package.json"><img src="https://img.shields.io/github/package-json/v/zstarczali/DiffStar/main?label=version&color=4c1" alt="Version"></a>
+  <a href="https://github.com/zstarczali/DiffStar/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/zstarczali/DiffStar/build.yml?branch=main&label=build" alt="Build"></a>
+  <a href="https://github.com/zstarczali/DiffStar/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-freeware-blue" alt="License: Freeware"></a>
+  <a href="https://www.c64va.pro/register/donate.php"><img src="https://img.shields.io/badge/donate-PayPal-00457C?logo=paypal&logoColor=white" alt="Donate"></a>
+</p>
+<p align="center">
+  <a href="https://v2.tauri.app/"><img src="https://img.shields.io/badge/Tauri-2-24C8D8?logo=tauri&logoColor=white" alt="Tauri 2"></a>
+  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-backend-B7410E?logo=rust&logoColor=white" alt="Rust"></a>
+  <a href="https://www.c64va.pro/diffstar.html"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-555" alt="Platforms"></a>
+  <a href="https://github.com/zstarczali/DiffStar/commits/main"><img src="https://img.shields.io/github/last-commit/zstarczali/DiffStar/main" alt="Last commit"></a>
+  <a href="https://github.com/zstarczali/DiffStar/graphs/commit-activity"><img src="https://img.shields.io/github/commit-activity/m/zstarczali/DiffStar" alt="Commit activity"></a>
+  <a href="https://github.com/zstarczali/DiffStar/issues"><img src="https://img.shields.io/github/issues/zstarczali/DiffStar" alt="Issues"></a>
+  <a href="https://github.com/zstarczali/DiffStar/stargazers"><img src="https://img.shields.io/github/stars/zstarczali/DiffStar?style=flat" alt="Stars"></a>
+</p>
+<p align="center">
+  <a href="https://github.com/zstarczali/DiffStar#readme"><img src="https://img.shields.io/badge/English-ddd" alt="English"></a>
+  <a href="https://github.com/zstarczali/DiffStar#readme"><img src="https://img.shields.io/badge/Magyar-ddd" alt="Magyar"></a>
+  <a href="https://github.com/zstarczali/GitStar"><img src="https://img.shields.io/badge/sibling-GitStar-8a2be2" alt="GitStar"></a>
+  <a href="https://github.com/zstarczali/FtpStar"><img src="https://img.shields.io/badge/sibling-FtpStar-8a2be2" alt="FtpStar"></a>
+</p>
+<!-- badges:end -->
+
 DiffStar is a file and folder comparison tool with a **Tauri 2 and Rust** backend. It is the sibling of [GitStar](https://github.com/zstarczali/GitStar) and shares its themes, dialogs and AI setup.
 
 Current version **0.2.2**. See [What's new](whatsnew.txt) for the release history.
