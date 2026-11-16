@@ -8,6 +8,7 @@ mod files;
 mod settings;
 mod thumb;
 mod update;
+mod usage;
 
 use commands::AppState;
 use tauri::{Emitter, Manager};
@@ -65,6 +66,7 @@ pub fn run() {
         )
         .setup(|app| {
             let dir = app.path().app_config_dir().unwrap_or_else(|_| std::env::temp_dir().join("DiffStar"));
+            usage::init(app.handle().clone(), dir.clone());
             app.manage(AppState { settings: settings::SettingsStore::load(dir) });
             let started = std::time::Instant::now();
             let handle = app.handle().clone();
@@ -93,6 +95,8 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            usage::ai_usage,
+            usage::ai_usage_reset,
             commands::get_settings,
             commands::save_settings,
             commands::set_ui_language,

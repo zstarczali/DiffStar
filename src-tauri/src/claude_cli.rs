@@ -133,6 +133,7 @@ pub fn complete(custom_path: &str, model: &str, effort: Option<&str>, system: &s
         let msg = if msg.is_empty() { format!("exit {}", out.status) } else { msg };
         return Err(format!("{}: {msg}", tr("Claude CLI hiba", "Claude CLI error")));
     };
+    crate::usage::record_cli(model, &v);
     let text = v["result"].as_str().unwrap_or("").trim().to_string();
     if v["is_error"].as_bool() == Some(true) || v["subtype"].as_str().is_some_and(|s| s != "success") {
         let mut msg = if text.is_empty() { stderr.trim().chars().take(600).collect() } else { text };

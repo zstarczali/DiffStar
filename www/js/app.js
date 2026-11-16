@@ -6,6 +6,7 @@ import {
   initUiState, uiGet, uiSet, editMenu, combo,
 } from './util.js';
 import { t, setLang, getLang } from './i18n.js';
+import { aiUsageInit, aiUsageItem } from './aiusage.js';
 import { TextCompare, newSide, sideFromLoaded } from './textview.js';
 import { FolderCompare } from './folderview.js';
 import { HexCompare, ImageCompare, IMG_EXT } from './binview.js';
@@ -366,7 +367,7 @@ function renderStatusbar() {
     h('span.grow'),
     ...(v ? v.status() : []),
     zoomNow() !== 1 ? h('span.zoom-status', { title: t('Nagyítás visszaállítása 100%-ra (Ctrl+0)'), on: { click: () => setZoom(1) } }, Math.round(zoomNow() * 100) + '%') : null,
-    h('span', t('AI: {0}', aiKey() ? aiModel() : t('nincs beállítva'))),
+    aiUsageItem(aiKey() ? aiModel() : t('nincs beállítva')),
     S.update?.updateAvailable ? h('span.update-status', { title: t('Kattints a telepítéshez'), on: { click: () => updateShowAvailable() } }, icon('fetch'), t('Frissítés elérhető: v{0}', S.update.latestVersion)) : null,
   );
 }
@@ -611,7 +612,7 @@ async function settingsDlg(startTab) {
     ['look', t('Megjelenés'), h('div.settings-grid',
       fld('ui_language', t('Felület nyelve'), sel([['auto', t('Automatikus (rendszer)')], ['hu', 'Magyar'], ['en', 'English']], s.ui_language || 'auto')),
       h('div'),
-      fld('theme', t('Téma'), sel([['dark', t('Sötét')], ['light', t('Világos')], ['ai', 'AI (neon)'], ['retro', t('Retró (8 bites)')], ['modern', t('Modern (üveg)')], ['modern-dark', t('Modern sötét (üveg)')], ['system', t('Rendszer szerint')]], s.theme)),
+      fld('theme', t('Téma'), sel([['dark', t('Sötét')], ['light', t('Világos')], ['ai', 'Neon'], ['retro', t('Retró (8 bites)')], ['modern', t('Modern (üveg)')], ['modern-dark', t('Modern sötét (üveg)')], ['system', t('Rendszer szerint')]], s.theme)),
       fld('font_size', t('Betűméret'), h('input.inp', { type: 'number', min: 10, max: 20, value: s.font_size })),
       fld('zoom', t('Nagyítás'), sel(ZOOMS.map((z) => [String(z), Math.round(z * 100) + '%']), String(ZOOMS.includes(zoomNow()) ? zoomNow() : 1)),
         t('Gyorsan: Ctrl + / Ctrl − / Ctrl 0, vagy Ctrl + egérgörgő.')))],
@@ -852,6 +853,7 @@ async function boot() {
   if (zoomNow() !== 1) applyZoom();
   matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (S.settings.theme === 'system') { applyTheme(); renderAll(); } });
   renderAll();
+  aiUsageInit(() => renderStatusbar());
   startDonationTimer();
 
   // previous session, then whatever the command line asks for
