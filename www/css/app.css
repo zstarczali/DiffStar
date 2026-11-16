@@ -950,3 +950,16 @@ svg.i.rot { transform: rotate(-90deg); }
 /* About: website link */
 .about-info a.about-link { color: var(--accent); cursor: pointer; text-decoration: none; }
 .about-info a.about-link:hover { text-decoration: underline; }
+
+/* AI token counter (status bar + dialog) */
+#statusbar .ai-usage { display: inline-flex; align-items: center; gap: 4px; }
+#statusbar .ai-usage svg.i { width: 12px; height: 12px; }
+#statusbar .ai-usage .ai-tok { font-variant-numeric: tabular-nums; }
+.ai-usage-dlg { display: flex; flex-direction: column; gap: 10px; }
+.ai-usage-tbl { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.ai-usage-tbl th, .ai-usage-tbl td { padding: 5px 8px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.ai-usage-tbl th { color: var(--text-dim); font-weight: 600; }
+.ai-usage-tbl td.num, .ai-usage-tbl th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.ai-usage-tbl tr.tot td { font-weight: 700; border-top: 2px solid var(--border); }
+.ai-usage-tbl tr.ses td { color: var(--text-dim); }
+.ai-usage-tbl td:first-child { white-space: normal; overflow-wrap: anywhere; }

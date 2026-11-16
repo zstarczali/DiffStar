@@ -93,6 +93,7 @@ pub async fn complete(req: AiRequest<'_>) -> Result<String, String> {
             c => format!("{} {c} {kind}: {msg}", tr("API hiba", "API error")),
         });
     }
+    crate::usage::record_anthropic(req.model, &v);
     if v["stop_reason"].as_str() == Some("refusal") {
         let expl = v["stop_details"]["explanation"].as_str().unwrap_or("");
         return Err(format!("{} {expl}", tr("A modell elutasította a kérést.", "The model declined the request.")));
@@ -156,6 +157,7 @@ async fn complete_deepseek(req: AiRequest<'_>) -> Result<String, String> {
             c => format!("DeepSeek {} {c}: {msg}", tr("hiba", "error")),
         });
     }
+    crate::usage::record_deepseek(req.model, &v);
     let choice = &v["choices"][0];
     let text = choice["message"]["content"].as_str().unwrap_or("").trim().to_string();
     if text.is_empty() {
