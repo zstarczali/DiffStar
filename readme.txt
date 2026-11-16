@@ -1,7 +1,7 @@
 DiffStar Installation Guide
 ===========================
 
-Version 0.2.2
+Version 0.2.3
 -------------
 On macOS the self-update installs the new version and restarts
 DiffStar, instead of only opening the downloaded .dmg.

@@ -1,6 +1,15 @@
 DiffStar - What's new
 =====================
 
+0.2.3
+-----
+- AI token counter in the status bar: the tokens used by the AI
+  features (input, output, prompt cache), counted from every answer of
+  the Claude API, DeepSeek and the Claude Code CLI. Click it for the
+  details per provider and model, this session and all time (with the
+  cost the Claude Code CLI reports), and to reset the counter. The
+  counts are kept across restarts.
+
 0.2.2
 -----
 - Fix: on macOS the self-update only downloaded and opened the .dmg
