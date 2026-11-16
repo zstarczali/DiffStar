@@ -2,6 +2,7 @@
   "name": "diffstar",
   "version": "0.2.3",
   "private": true,
+  "license": "MIT",
   "description": "DiffStar - file and folder compare (Tauri 2 + Rust) with visual diff, merge and AI explanations",
   "scripts": {
     "dev": "tauri dev",

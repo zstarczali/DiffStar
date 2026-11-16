@@ -509,7 +509,7 @@ async function aboutDlg() {
     h('div.about-info', rows.map(([k, v]) => [h('span.k', k), h('span.v', { title: v }, v)]),
       h('span.k', t('Weboldal')), h('span.v', h('a.about-link', { title: SITE_URL, on: { click: () => invoke('open_url', { url: SITE_URL }).catch((e) => toast(String(e), 'err')) } }, SITE_URL.replace(/^https:\/\//, '')))),
     h('div.about-foot', t('Rust + Tauri 2. A GitStar testvérprogramja. AI: Anthropic Claude (API vagy Claude Code CLI) vagy DeepSeek.')),
-    h('div.about-free', t('A DiffStar ingyenes (freeware). Ha hasznos neked, egy kis adománnyal támogathatod a fejlesztést. Köszönöm!')),
+    h('div.about-free', t('A DiffStar ingyenes, MIT-licencű. Ha hasznos neked, egy kis adománnyal támogathatod a fejlesztést. Köszönöm!')),
     h('div.about-copy', '© 2026 Zsolt Tarczali'));
   const res = await modal({ title: t('Névjegy'), body, buttons: [
     { label: t('Adomány'), value: 'donate' },

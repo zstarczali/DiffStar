@@ -3,6 +3,7 @@ name = "diffstar"
 version = "0.2.3"
 description = "DiffStar - file and folder compare with visual diff, merge and AI explanations"
 edition = "2021"
+license = "MIT"
 
 [lib]
 name = "diffstar_lib"

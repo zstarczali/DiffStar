@@ -92,3 +92,6 @@ git difftool, open Settings > Git and click "Set up now", or run:
   git config --global diff.tool diffstar
   git config --global difftool.diffstar.cmd "\"<path to DiffStar>\" \"$LOCAL\" \"$REMOTE\""
   git config --global difftool.prompt false
+
+License: MIT. Copyright (c) 2026 Zsolt Tarczali. See LICENSE.
+Third-party components retain their own licenses.
