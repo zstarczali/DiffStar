@@ -28,6 +28,7 @@ export const EN = {
   'Mentés': 'Save',
   'Újratöltés': 'Reload',
   'Bezárás': 'Close',
+  'További fülek: {0}': 'More tabs: {0}',
   'A többi bezárása': 'Close others',
   'Fül bezárása': 'Close tab',
   'Bezárod a(z) „{0}” fület?': 'Close the "{0}" tab?',

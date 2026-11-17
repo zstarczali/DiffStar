@@ -2,7 +2,7 @@
 // about, self-update. The comparison views live in textview / folderview / binview.
 
 import {
-  invoke, h, icon, toast, modal, confirmDlg, contextMenu, markdown, debounce, basename,
+  invoke, h, icon, toast, modal, confirmDlg, contextMenu, fitTabs, markdown, debounce, basename,
   initUiState, uiGet, uiSet, editMenu, combo,
 } from './util.js';
 import { t, setLang, getLang } from './i18n.js';
@@ -318,6 +318,7 @@ function renderTabs() {
     h('button.x', { title: t('Bezárás'), on: { click: (e) => { e.stopPropagation(); askCloseTab(i); } } }, icon('close')))),
     h('button.tab-add', { title: t('Új összehasonlítás'), on: { click: () => { S.active = -1; renderAll(); } } }, icon('plus')),
   );
+  fitTabs(el, S.active, (i) => ({ label: S.tabs[i].title(), icon: tabIcon(S.tabs[i]), action: () => switchTab(i) }));
 }
 
 function tb(label, ic, action, { disabled, title, menu } = {}) {
