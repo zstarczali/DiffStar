@@ -1,6 +1,13 @@
 DiffStar - What's new
 =====================
 
+0.2.4
+-----
+- When the comparison tabs do not fit in the window, the ones that fit
+  are shown (the active one always) and a "v N" button after them
+  lists the other comparisons: pick one from its menu to switch to it.
+  The tab bar follows the window width when it is resized.
+
 0.2.3
 -----
 - AI token counter in the status bar: the tokens used by the AI
