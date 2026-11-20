@@ -1,6 +1,13 @@
 DiffStar - What's new
 =====================
 
+0.2.5
+-----
+- Comparison tabs can be reordered by dragging them with the mouse.
+  The new order is kept for the next start.
+- The AI features can be switched off in Settings -> AI. When off,
+  DiffStar never contacts an AI provider and the AI buttons are hidden.
+
 0.2.4
 -----
 - When the comparison tabs do not fit in the window, the ones that fit

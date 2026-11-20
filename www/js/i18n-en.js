@@ -431,4 +431,7 @@ export const EN = {
   '{0} perce': '{0} min ago',
   '{0} órája': '{0} h ago',
   '{0} napja': '{0} days ago',
+  'AI funkciók bekapcsolása': 'Turn on the AI features',
+  'Az AI funkciók ki vannak kapcsolva (Beállítások → AI).': 'The AI features are switched off (Settings → AI).',
+  'Kikapcsolva a DiffStar semmilyen AI szolgáltatóhoz nem fordul, és az AI gombok sem látszanak.': 'When off, DiffStar never contacts an AI provider and the AI buttons are hidden.',
 };

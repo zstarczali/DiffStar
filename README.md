@@ -31,7 +31,7 @@
 
 DiffStar is a file and folder comparison tool with a **Tauri 2 and Rust** backend. It is the sibling of [GitStar](https://github.com/zstarczali/GitStar) and shares its themes, dialogs and AI setup.
 
-Current version **0.2.4**. See [What's new](whatsnew.txt) for the release history.
+Current version **0.2.5**. See [What's new](whatsnew.txt) for the release history.
 
 ## Features
 

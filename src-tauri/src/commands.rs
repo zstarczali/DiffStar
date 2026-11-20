@@ -313,6 +313,9 @@ pub async fn ai_explain(
     history: Option<Vec<Turn>>,
 ) -> Result<AiResult, String> {
     let cfg = state.settings.get();
+    if !cfg.ai_enabled {
+        return Err(tr("Az AI funkciók ki vannak kapcsolva (Beállítások → AI).", "The AI features are switched off (Settings → AI)."));
+    }
     let (ln, rn) = (left_name.clone(), right_name.clone());
     let patch = blocking(move || Ok(diff::unified(&left, &right, &ln, &rn, 5))).await?;
     if patch.trim().is_empty() {
@@ -341,6 +344,9 @@ pub async fn ai_folder(
     history: Option<Vec<Turn>>,
 ) -> Result<AiResult, String> {
     let cfg = state.settings.get();
+    if !cfg.ai_enabled {
+        return Err(tr("Az AI funkciók ki vannak kapcsolva (Beállítások → AI).", "The AI features are switched off (Settings → AI)."));
+    }
     let fallback = cfg.fallback_encoding.clone();
     let budget = if cfg.ai_provider == "deepseek" { 120_000 } else { 300_000 };
     let (l, r) = (left.clone(), right.clone());

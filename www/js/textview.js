@@ -295,7 +295,7 @@ export class TextCompare {
       h('span.seg',
         h('button' + (s.diff_mode !== 'unified' ? '.on' : ''), { title: t('Egymás melletti nézet'), on: { click: () => this.setPref('diff_mode', 'split') } }, t('Osztott')),
         h('button' + (s.diff_mode === 'unified' ? '.on' : ''), { title: t('Egyesített nézet'), on: { click: () => this.setPref('diff_mode', 'unified') } }, t('Egyesített'))),
-      h('button.btn.sm.ai', { disabled: !n || null, title: t('Az eltérések magyarázata AI-jal'), on: { click: () => this.aiExplain() } }, icon('sparkle'), 'AI'),
+      h('button.btn.sm.ai.ai-opt', { disabled: !n || null, title: t('Az eltérések magyarázata AI-jal'), on: { click: () => this.aiExplain() } }, icon('sparkle'), 'AI'),
       h('button.icon-btn', { title: t('Exportálás…'), on: { click: (e) => this.exportMenu(e) } }, icon('export')),
     );
   }

@@ -70,6 +70,9 @@ pub struct Settings {
 
     // ── AI ──
     /// "anthropic" | "deepseek" | "claude-cli"
+    /// AI features on / off (off: no AI provider is ever called)
+    pub ai_enabled: bool,
+    /// "anthropic" | "deepseek" | "claude-cli"
     pub ai_provider: String,
     pub claude_cli_path: String,
     pub anthropic_api_key: String,
@@ -111,6 +114,7 @@ impl Default for Settings {
             session: vec![],
             session_active: -1,
             restore_session: true,
+            ai_enabled: true,
             ai_provider: "anthropic".into(),
             claude_cli_path: String::new(),
             anthropic_api_key: String::new(),
