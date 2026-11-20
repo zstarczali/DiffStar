@@ -1,6 +1,6 @@
 [package]
 name = "diffstar"
-version = "0.2.4"
+version = "0.2.5"
 description = "DiffStar - file and folder compare with visual diff, merge and AI explanations"
 edition = "2021"
 license = "MIT"

@@ -132,7 +132,7 @@ export class FolderCompare {
       flt('left', 'left', t('Csak bal'), c.left, t('Csak a bal oldalon lévő fájlok mutatása')),
       flt('right', 'right', t('Csak jobb'), c.right, t('Csak a jobb oldalon lévő fájlok mutatása')),
       h('span.grow'),
-      h('button.btn.sm.ai', { disabled: !this.res || this.running || !(c.diff + c.left + c.right) || null, title: t('A mappák eltéréseinek elemzése és tanácsok AI-jal'), on: { click: () => this.aiExplain() } }, icon('sparkle'), 'AI'),
+      h('button.btn.sm.ai.ai-opt', { disabled: !this.res || this.running || !(c.diff + c.left + c.right) || null, title: t('A mappák eltéréseinek elemzése és tanácsok AI-jal'), on: { click: () => this.aiExplain() } }, icon('sparkle'), 'AI'),
       h('button.btn.sm', { disabled: !(this.left || this.right) || null, title: t('Azonos tartalmú fájlok keresése a két mappában (és mappán belül)'), on: { click: () => this.ctx.openDups([this.left, this.right].filter(Boolean)) } }, icon('dups'), t('Duplikátumok')),
       filter,
       this.view === 'details' ? h('button.icon-btn', { title: t('Mind kibontása'), on: { click: () => this.expandAll(true) } }, icon('expand')) : null,

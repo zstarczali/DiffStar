@@ -589,3 +589,55 @@ function layoutTabs(el) {
   more.title = t('További fülek: {0}', hidden.length);
   more.dataset.hidden = hidden.join(',');
 }
+
+/**
+ * Drag a tab of the strip to reorder it; call from the tab's pointerdown.
+ * onDrop(from, to) gets the old and new index when the tab really moved.
+ * Pointer events, not HTML5 drag and drop: the webview's file drop handler
+ * swallows the HTML5 drag events on Windows.
+ */
+export function dragTab(e, from, onDrop) {
+  if (e.button !== 0 || e.target.closest('.x')) return;
+  const tab = e.currentTarget;
+  const strip = tab.parentElement;
+  const x0 = e.clientX;
+  let to = from, dragging = false;
+  const clear = () => strip.querySelectorAll('.tab.drop-before, .tab.drop-after').forEach((x) => x.classList.remove('drop-before', 'drop-after'));
+  const move = (ev) => {
+    const dx = ev.clientX - x0;
+    if (!dragging) {
+      if (Math.abs(dx) < 5) return;
+      dragging = true;
+      tab.classList.add('dragging');
+    }
+    tab.style.transform = `translateX(${dx}px)`;
+    // target = the visible tab under the pointer; its left or right half decides the side
+    clear();
+    to = from;
+    [...strip.querySelectorAll(':scope > .tab')].forEach((x, i) => {
+      if (i === from || x.hidden) return;
+      const r = x.getBoundingClientRect();
+      if (ev.clientX < r.left || ev.clientX >= r.right) return;
+      const after = ev.clientX >= r.left + r.width / 2;
+      x.classList.add(after ? 'drop-after' : 'drop-before');
+      to = after ? (i < from ? i + 1 : i) : (i < from ? i : i - 1);
+    });
+  };
+  const up = () => {
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+    window.removeEventListener('pointercancel', up);
+    if (!dragging) return;
+    clear();
+    tab.classList.remove('dragging');
+    tab.style.transform = '';
+    // the click that follows the drop must not switch tabs
+    const eat = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+    window.addEventListener('click', eat, { capture: true, once: true });
+    setTimeout(() => window.removeEventListener('click', eat, { capture: true }));
+    if (to !== from) onDrop(from, to);
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+  window.addEventListener('pointercancel', up);
+}

@@ -2,7 +2,7 @@
 // about, self-update. The comparison views live in textview / folderview / binview.
 
 import {
-  invoke, h, icon, toast, modal, confirmDlg, contextMenu, fitTabs, markdown, debounce, basename,
+  invoke, h, icon, toast, modal, confirmDlg, contextMenu, fitTabs, dragTab, markdown, debounce, basename,
   initUiState, uiGet, uiSet, editMenu, combo,
 } from './util.js';
 import { t, setLang, getLang } from './i18n.js';
@@ -27,6 +27,7 @@ const S = {
 const cur = () => S.tabs[S.active] || null;
 const isDeepSeek = () => S.settings?.ai_provider === 'deepseek';
 const isClaudeCli = () => S.settings?.ai_provider === 'claude-cli';
+const aiOn = () => S.settings?.ai_enabled !== false;
 const aiKey = () => (isClaudeCli() ? 'cli' : (isDeepSeek() ? S.settings?.deepseek_api_key : S.settings?.anthropic_api_key) || '');
 const aiProviderName = () => (isDeepSeek() ? 'DeepSeek' : isClaudeCli() ? 'Claude Code CLI' : 'Anthropic Claude');
 const aiModel = () => (isDeepSeek() ? S.settings?.deepseek_model : S.settings?.ai_model) || '';
@@ -78,6 +79,8 @@ function applyTheme() {
   let th = S.settings.theme;
   if (th === 'system') th = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   document.documentElement.dataset.theme = th;
+  // AI off: hides the AI buttons of views that stay open at once
+  document.documentElement.classList.toggle('no-ai', !aiOn());
   document.documentElement.style.setProperty('--font-size', (S.settings.font_size || 13) + 'px');
 }
 
@@ -298,6 +301,14 @@ function renderAll() {
 
 const tabIcon = (v) => ({ text: 'files', folder: 'folders', hex: 'hex', image: 'image', dups: 'dups' }[v.kind] || 'file');
 
+/** Drag & drop reorder of the tabs; the active tab stays active. */
+function moveTab(from, to) {
+  const active = cur();
+  S.tabs.splice(to, 0, ...S.tabs.splice(from, 1));
+  S.active = S.tabs.indexOf(active);
+  persistSession(); renderTabs();
+}
+
 function renderTabs() {
   const el = document.getElementById('tabs');
   el.replaceChildren(
@@ -305,6 +316,7 @@ function renderTabs() {
       title: v.tooltip(),
       on: {
         mousedown: (e) => { if (e.button === 1) { e.preventDefault(); askCloseTab(i); } },
+        pointerdown: (e) => dragTab(e, i, moveTab),
         click: () => switchTab(i),
         contextmenu: (e) => contextMenu(e, [
           { label: t('Újratöltés'), icon: 'refresh', key: 'F5', action: () => { switchTab(i); v.reload(); } },
@@ -368,7 +380,7 @@ function renderStatusbar() {
     h('span.grow'),
     ...(v ? v.status() : []),
     zoomNow() !== 1 ? h('span.zoom-status', { title: t('Nagyítás visszaállítása 100%-ra (Ctrl+0)'), on: { click: () => setZoom(1) } }, Math.round(zoomNow() * 100) + '%') : null,
-    aiUsageItem(aiKey() ? aiModel() : t('nincs beállítva')),
+    aiOn() ? aiUsageItem(aiKey() ? aiModel() : t('nincs beállítva')) : null,
     S.update?.updateAvailable ? h('span.update-status', { title: t('Kattints a telepítéshez'), on: { click: () => updateShowAvailable() } }, icon('fetch'), t('Frissítés elérhető: v{0}', S.update.latestVersion)) : null,
   );
 }
@@ -407,6 +419,7 @@ function renderWelcome(el) {
 /** run(question, history) -> {text, truncated}; presets: quick follow-up questions */
 function aiPanel(title, run, presets = []) {
   document.querySelector('.ai-panel')?.remove();
+  if (!aiOn()) { toast(t('Az AI funkciók ki vannak kapcsolva (Beállítások → AI).'), 'err'); return; }
   if (!aiKey()) {
     toast(t('Az AI funkciókhoz add meg az API kulcsot (vagy válaszd a Claude Code CLI-t) a Beállításokban.'), 'err');
     settingsDlg('ai');
@@ -579,6 +592,7 @@ async function settingsDlg(startTab) {
   } } }, t('Teszt'));
 
   // ── update ──
+  const aiEnabled = h('input', { type: 'checkbox', checked: s.ai_enabled !== false });
   const updCheck = h('input', { type: 'checkbox', checked: s.update_check !== false });
   const updServer = h('input.inp', { value: s.update_server || '', placeholder: 'https://www.c64va.pro/', spellcheck: 'false' });
   const saveUpdServer = async () => {
@@ -587,6 +601,15 @@ async function settingsDlg(startTab) {
     await saveSettings();
     checkForAppUpdate();
   };
+
+  const aiBox = h('div.settings-grid.full.ai-box',
+    h('label.field.full', h('span', t('AI szolgáltató')), h('div', { style: { display: 'flex', gap: '6px' } }, providerSel, aiTestBtn), aiTestOut),
+    claudeBox, dsBox,
+    fld('ai_language', t('AI válaszok nyelve'), sel([['hu', t('Magyar')], ['en', 'English']], s.ai_language)),
+    h('div.note.full', t('Az AI gomb (szöveg- és mappa-összehasonlításnál) elmagyarázza az eltéréseket és tanácsot ad az összefésüléshez; utána kérdezhetsz is tőle. Csak az eltérések (diff) kerülnek elküldésre a választott szolgáltatónak.')));
+  const syncAi = () => aiBox.classList.toggle('off', !aiEnabled.checked);
+  aiEnabled.addEventListener('change', syncAi);
+  syncAi();
 
   // ── git difftool ──
   const exe = await invoke('exe_path').catch(() => '');
@@ -618,10 +641,9 @@ async function settingsDlg(startTab) {
       fld('zoom', t('Nagyítás'), sel(ZOOMS.map((z) => [String(z), Math.round(z * 100) + '%']), String(ZOOMS.includes(zoomNow()) ? zoomNow() : 1)),
         t('Gyorsan: Ctrl + / Ctrl − / Ctrl 0, vagy Ctrl + egérgörgő.')))],
     ['ai', 'AI', h('div.settings-grid',
-      h('label.field.full', h('span', t('AI szolgáltató')), h('div', { style: { display: 'flex', gap: '6px' } }, providerSel, aiTestBtn), aiTestOut),
-      claudeBox, dsBox,
-      fld('ai_language', t('AI válaszok nyelve'), sel([['hu', t('Magyar')], ['en', 'English']], s.ai_language)),
-      h('div.note.full', t('Az AI gomb (szöveg- és mappa-összehasonlításnál) elmagyarázza az eltéréseket és tanácsot ad az összefésüléshez; utána kérdezhetsz is tőle. Csak az eltérések (diff) kerülnek elküldésre a választott szolgáltatónak.')))],
+      h('label.chk.full.ai-switch', aiEnabled, h('b', t('AI funkciók bekapcsolása'))),
+      h('div.note.full', t('Kikapcsolva a DiffStar semmilyen AI szolgáltatóhoz nem fordul, és az AI gombok sem látszanak.')),
+      aiBox)],
     ['git', 'Git', h('div.settings-grid',
       h('div.field.full', h('span', t('DiffStar mint git difftool')),
         h('span.note', t('Ezután a „git difftool” (és a GitStar külső diff-je) a DiffStarban nyitja meg a fájlpárokat; egy már futó DiffStar új fülön kapja meg őket.')),
@@ -666,6 +688,7 @@ async function settingsDlg(startTab) {
     ui_language: els.ui_language.value,
     font_size: Math.max(10, Math.min(20, +els.font_size.value || 13)),
     zoom: +els.zoom.value || 1,
+    ai_enabled: aiEnabled.checked,
     ai_provider: providerSel.value,
     anthropic_api_key: key.value.trim(),
     claude_cli_path: cliPath.value.trim(),
@@ -679,6 +702,7 @@ async function settingsDlg(startTab) {
   try { await invoke('update_server_check', { url: updServer.value }); S.settings.update_server = updServer.value.trim(); }
   catch (e) { toast(String(e), 'err'); }
   await saveSettings();
+  if (!aiOn()) document.querySelector('.ai-panel')?.remove();
   applyLang();
   applyTheme();
   renderAll();
